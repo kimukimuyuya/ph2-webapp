@@ -13,20 +13,15 @@ $sql = 'SELECT SUM(hours) from webapp where DATE_FORMAT(date, "%Y%m") = DATE_FOR
 $month_hours = $dbh->query($sql)->fetch(pdo::FETCH_COLUMN);
 
 
-$sql = "SELECT DATE_FORMAT(webapp.date,'%Y-%m-%d') day, sum(webapp.hours) hours FROM webapp group by day";
+$sql = "SELECT DATE_FORMAT(webapp.date,'%e') day, sum(webapp.hours) hours FROM webapp WHERE DATE_FORMAT(date, '%Y%m') = DATE_FORMAT(NOW(), '%Y%m') group by day";
 $studies = $dbh->query($sql)->fetchAll(\PDO::FETCH_CLASS, Study::class);
 $formatted_study_data = array_map(function ($study) {
   return [$study->get_day(), $study->get_hours()];
 }, $studies);
 $chart_data = json_encode($formatted_study_data);
-echo "<pre>";
-print_r($chart_data);
-echo "</pre>";
-
-
-
-
-
+// echo "<pre>";
+// print_r($chart_data);
+// echo "</pre>";
 ?>
 
 
@@ -40,82 +35,15 @@ echo "</pre>";
   <title>webapp</title>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script src="./assets/js/script.js" defer></script>
   <!-- <script src="./assets/js/chart1.js" defer></script> -->
-  <script>
-    {
-
-      let chart_data = <?php echo $chart_data; ?>;
-      console.log(chart_data[1][1]);
-      var ctx = document.getElementById('myChart1').getContext('2d');
-
-      var blue_gradient = ctx.createLinearGradient(0, 0, 0, 500);
-      blue_gradient.addColorStop(0, '#3CCFFF');
-      blue_gradient.addColorStop(1, '#0F72BD');
-
-      var myGraphChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['', '2', '', '4', '', '6', '', '8', '', '10', '', '12', '', '14', '', '16', '', '18', '', '20', '', '22', '', '24', '', '26', '', '28', '', '30'],
-          datasets: [{
-            label: "学習時間",
-            data: ['3', '4', '5', '3', '0', '0', '4', '2', '2', '8', '8', '2', '2', '1', '7', '4', '4', '3', '3', '3', '2', '2', '6', '2', '2', '1', '1', '1', '7', '8', ],
-            backgroundColor: blue_gradient,
-            barPercentage: 0.6,
-            borderRadius: 5,
-          }],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false,
-            },
-          },
-          scales: {
-            x: {
-              grid: {
-                drawBorder: false,
-                drawOnChartArea: false,
-                drawTicks: false,
-              },
-              ticks: {
-                padding: 10,
-                maxTicksLimit: 30,
-                // stepSize: 2,
-                color: '#97B9D0',
-                scaleFontSize: 40,
-                beginAtZero: true
-              }
-            },
-            y: {
-              grid: {
-                drawBorder: false,
-                drawOnChartArea: false,
-                drawTicks: false,
-              },
-              ticks: {
-                padding: 10,
-                stepSize: 2,
-                color: '#97B9D0',
-                beginAtZero: true,
-                callback: function(value, index, values) {
-                  return value + 'h';
-                },
-              }
-            }
-          }
-        }
-      });
-    }
-  </script>
+  
   <script src="./assets/js/chart2.js" defer></script>
-  <!-- <script src="./assets/js/calendar.js" defer></script> -->
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" defer></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js" defer></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.4.0/dist/chartjs-plugin-datalabels.min.js" defer></script>
+  <!-- <script src="./assets/js/calendar.js" defer></script> -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
@@ -310,6 +238,78 @@ echo "</pre>";
 
   <footer></footer>
 </body>
+<script>
+{
+  let chart_data = <?php echo $chart_data; ?>;
+  const transpose = a => a[0].map((_, c) => a.map(r => r[c]));
+  data = transpose(chart_data);
+  // console.log(data)
+  var ctx = document.getElementById('myChart1').getContext('2d');
+
+  var blue_gradient = ctx.createLinearGradient(0, 0, 0, 500);
+  blue_gradient.addColorStop(0, '#3CCFFF');
+  blue_gradient.addColorStop(1, '#0F72BD');
+
+  var myGraphChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data[0],
+      datasets: [{
+        label: "学習時間",
+        data: data[1],
+        backgroundColor: blue_gradient,
+        barPercentage: 0.6,
+        borderRadius: 5,
+        
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false,
+        },
+      },
+      scales: {
+        x: {
+          grid: {
+            drawBorder: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+          },
+          ticks: {
+            padding: 10,
+            color: '#97B9D0',
+            beginAtZero: true,
+            maxTicksLimit: 30,
+            stepSize: 2,
+            scaleFontSize: 40,
+            maxTicksLimit: 30
+          }
+        },
+        y: {
+          grid: {
+            drawBorder: false,
+            drawOnChartArea: false,
+            drawTicks: false,
+          },
+          ticks: {
+            padding: 10,
+            stepSize: 2,
+            color: '#97B9D0',
+            beginAtZero: true,
+            callback: function (value, index, values) {
+              return value + 'h';
+            },
+          }
+        }
+      }
+    }
+  });
+}
+</script>
+
 
 
 

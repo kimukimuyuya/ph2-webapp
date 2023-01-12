@@ -1,8 +1,7 @@
 'use strict';
 {
 
-  let chart_data = <?php echo $chart_data; ?>;
-  console.log(chart_data);
+  
   var ctx = document.getElementById('myChart1').getContext('2d');
 
   var blue_gradient = ctx.createLinearGradient(0, 0, 0, 500);
