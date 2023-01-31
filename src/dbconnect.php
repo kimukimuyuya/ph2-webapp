@@ -25,9 +25,9 @@ foreach($webapp_languages as $key => $language) {
   $webapp[$index]["languages"][] = $language;
 }
 
-// echo"<pre>";
-// print_r($webapp);
-// echo"</pre>";
+echo"<pre>";
+print_r($webapp);
+echo"</pre>";
 
 class Study {
   public $day;
