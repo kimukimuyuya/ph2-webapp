@@ -19,9 +19,17 @@ $formatted_study_data = array_map(function ($study) {
   return [$study->get_day(), $study->get_hours()];
 }, $studies);
 $chart_data = json_encode($formatted_study_data);
-// echo "<pre>";
-// print_r($chart_data);
-// echo "</pre>";
+
+$sql = 'SELECT SUM(language_hour) from webapp_languages group by language';
+$languages = $dbh->query($sql)->fetchAll(pdo::FETCH_COLUMN);
+$chart_languages = json_encode($languages);
+
+$sql = 'SELECT SUM(content_hour) from webapp_contents group by content_id';
+$contents = $dbh->query($sql)->fetchAll(pdo::FETCH_COLUMN);
+$chart_contents = json_encode($contents);
+echo "<pre>";
+print_r($chart_languages);
+echo "</pre>";
 ?>
 
 
@@ -39,7 +47,7 @@ $chart_data = json_encode($formatted_study_data);
   <script src="./assets/js/script.js" defer></script>
   <!-- <script src="./assets/js/chart1.js" defer></script> -->
   
-  <script src="./assets/js/chart2.js" defer></script>
+  <!-- <script src="./assets/js/chart2.js" defer></script> -->
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" defer></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js" defer></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@0.4.0/dist/chartjs-plugin-datalabels.min.js" defer></script>
@@ -307,6 +315,100 @@ $chart_data = json_encode($formatted_study_data);
       }
     }
   });
+  let chart_languages = <?php echo $chart_languages; ?>;
+  let language_number = chart_languages.map(Number);
+  let $chart_contents = <?php echo $chart_contents; ?>;
+  let content_number = $chart_contents.map(Number);
+  window.onload = function () {
+    var data = [{
+      // data: [30,20,10,5,5,20,20,10],
+      data: language_number,
+
+      labels: ['HTML','CSS','JavaScript','PHP','Laravel','SQL','SHELL','その他'],
+      backgroundColor: ['#0345EC','#0F72BD','#20BDDE','#3DCEFE','#B29EF3','#6D46EC','#4A18EF','#3105C0'],
+      borderColor: "#fff"
+    }];
+    var options = {
+      maintainAspectRatio: false,
+      cutoutPercentage: 50,
+      elements: {
+        arc: {
+          borderWidth: 0
+        }
+      },
+      tooltips: {
+        enabled: false
+      },
+      plugins: {
+        datalabels: {
+          formatter: (value, ctx) => {
+            let datasets = ctx.chart.data.datasets;
+            if (datasets.indexOf(ctx.dataset) === datasets.length - 1) {
+              let sum = datasets[0].data.reduce((a, b) => a + b, 0);
+              let percentage = Math.round((value / sum) * 100) + '%';
+              return percentage;
+            } else {
+              return percentage;
+            }
+          },
+          color: '#fff',
+        }
+      }
+    };
+    var ctx = document.getElementById("myChart2").getContext('2d');
+    var myLangChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        datasets: data
+      },
+      options: options
+    });
+
+
+    var data = [{
+      
+      data: content_number,
+      labels: ['N予備校', 'ドットインストール', '課題'],
+      backgroundColor: ['#0345EC', '#0F72BD', '#20BDDE'],
+      borderColor: "#fff"
+      
+    }];
+    var options = {
+      maintainAspectRatio: false,
+      cutoutPercentage: 50,
+      elements: {
+        arc: {
+          borderWidth: 0
+        }
+      },
+      tooltips: {
+        enabled: false
+      },
+      plugins: {
+        datalabels: {
+          formatter: (value, ctx) => {
+            let datasets = ctx.chart.data.datasets;
+            if (datasets.indexOf(ctx.dataset) === datasets.length - 1) {
+              let sum = datasets[0].data.reduce((a, b) => a + b, 0);
+              let percentage = Math.round((value / sum) * 100) + '%';
+              return percentage;
+            } else {
+              return percentage;
+            }
+          },
+          color: '#fff',
+        }
+      }
+    };
+    var ctx = document.getElementById("myChart3").getContext('2d');
+    var myContentChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        datasets: data
+      },
+      options: options
+    });
+  }
 }
 </script>
 
